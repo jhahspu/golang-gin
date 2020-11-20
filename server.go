@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/jhahspu/golang-gin/controller"
 	"github.com/jhahspu/golang-gin/middleware"
 	"github.com/jhahspu/golang-gin/service"
@@ -31,19 +32,32 @@ func main() {
 
 	server.Use(gin.Recovery(), middleware.Logger(), middleware.BasicAuth(), gindump.Dump())
 
-	server.GET("/videos", func(ctx *gin.Context) {
-		ctx.JSON(200, videoController.FindAll())
-	})
+	// serve static files
+	server.Static("/css", "./templates/css")
 
-	server.POST("/videos", func(ctx *gin.Context) {
-		err := videoController.Save(ctx)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			ctx.JSON(http.StatusOK, gin.H{"message": "Video input valid"})
-		}
+	// serve html templates
+	server.LoadHTMLGlob("templates/*.html")
 
-	})
+	apiRoutes := server.Group("/api")
+	{
+		apiRoutes.GET("/videos", func(ctx *gin.Context) {
+			ctx.JSON(200, videoController.FindAll())
+		})
+
+		apiRoutes.POST("/videos", func(ctx *gin.Context) {
+			err := videoController.Save(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "Video input valid"})
+			}
+		})
+	}
+
+	viewRoutes := server.Group("/view")
+	{
+		viewRoutes.GET("/videos", videoController.ShowAll)
+	}
 
 	server.Run(":8080")
 }

@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/jhahspu/golang-gin/entity"
@@ -12,6 +14,7 @@ import (
 type VideoController interface {
 	FindAll() []entity.Video
 	Save(ctx *gin.Context) error
+	ShowAll(ctx *gin.Context)
 }
 
 // Controller struct to control the interface
@@ -48,4 +51,15 @@ func (c *controller) Save(ctx *gin.Context) error {
 	}
 	c.service.Save(video)
 	return nil
+}
+
+// ShowAll will retrieve all videos
+// and pass them to the viewRouts /view component
+func (c *controller) ShowAll(ctx *gin.Context) {
+	videos := c.service.FindAll()
+	data := gin.H{
+		"title":  "Video Page",
+		"videos": videos,
+	}
+	ctx.HTML(http.StatusOK, "index.html", data)
 }
